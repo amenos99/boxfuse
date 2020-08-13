@@ -1,11 +1,11 @@
 
 pipeline {
+    def app
+    def dockerfile = 'Dockerfile'
     agent { dockerfile true }
     tools {
         maven 'm3'
     }
-	def app
-	def dockerfile = 'Dockerfile'
 	
 	/* Checking that repository cloned to workspace */
     stages {
@@ -17,7 +17,7 @@ pipeline {
 	/* Building image */	
         stage ('build') {
             steps {
-			    app = docker.build("helloboxfuse:${env.BUILD_ID}", "-f ${dockerfile}")
+	        app = docker.build("helloboxfuse:${env.BUILD_ID}", "-f ${dockerfile}")
             }
         }
 	/* Deploy step */
@@ -29,11 +29,10 @@ pipeline {
     }
 	/* Push the image to the Docker Hub Registry */
 	
-    node {
-	
-       docker.withRegistry ('https://registry.hub.docker.com', 'docker-hub-credentials'){
-			app.inside {
-              app.push ("${env.BUILD_NUMBER}","latest")
+	stage ('push') {
+	           docker.withRegistry ('https://registry.hub.docker.com', 'docker-hub-credentials'){
+		   app.inside {
+                    app.push ("${env.BUILD_NUMBER}","latest")
 			}
         }
 		
